@@ -3,32 +3,56 @@ import '../components/components.dart';
 import '../models/models.dart';
 import '../api/mock_fooderlich_service.dart';
 
-class ExploreScreen extends StatelessWidget {
-  // 1
-  final mockService = MockFooderlichService();
-  ExploreScreen({super.key});
+class ExploreScreen extends StatefulWidget {
+  ExploreScreen({Key? key}) : super(key: key);
+
   @override
+  _ExploreScreenState createState() => _ExploreScreenState();
+}
+
+class _ExploreScreenState extends State<ExploreScreen> {
+  final mockService = MockFooderlichService();
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.offset >=
+            _scrollController.position.maxScrollExtent &&
+        !_scrollController.position.outOfRange) {
+      print('I am at the bottom!');
+    }
+    if (_scrollController.offset <=
+            _scrollController.position.minScrollExtent &&
+        !_scrollController.position.outOfRange) {
+      print('I am at the top!');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // 1
     return FutureBuilder(
-      // 2
       future: mockService.getExploreData(),
-      // 3
       builder: (context, AsyncSnapshot<ExploreData> snapshot) {
-        // 4
         if (snapshot.connectionState == ConnectionState.done) {
-          // 5
           return ListView(
-            // 6
             scrollDirection: Axis.vertical,
+            controller: _scrollController,
             children: [
-              // 7
               TodayRecipeListView(recipes: snapshot.data?.todayRecipes ?? []),
-              // 8
               const SizedBox(height: 16),
-              // 9
-              // TODO: Replace this with FriendPostListView
               FriendPostListView(friendPosts: snapshot.data?.friendPosts ?? []),
               Container(
                 height: 400,
@@ -37,7 +61,6 @@ class ExploreScreen extends StatelessWidget {
             ],
           );
         } else {
-          // 10
           return const Center(child: CircularProgressIndicator());
         }
       },
